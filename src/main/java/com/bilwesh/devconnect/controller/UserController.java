@@ -2,8 +2,8 @@ package com.bilwesh.devconnect.controller;
 
 import com.bilwesh.devconnect.dto.UserRegistrationRequest;
 import com.bilwesh.devconnect.dto.UserRegistrationResponse;
-import com.bilwesh.devconnect.service.UserServiceImpl;
 import com.bilwesh.devconnect.service.impl.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +22,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserRegistrationResponse> register(@RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<UserRegistrationResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
         UserRegistrationResponse response = userService.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
