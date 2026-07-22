@@ -1,20 +1,29 @@
 package com.bilwesh.devconnect.service;
 
+import com.bilwesh.devconnect.dto.UserLoginRequest;
+import com.bilwesh.devconnect.dto.UserLoginResponse;
 import com.bilwesh.devconnect.dto.UserRegistrationRequest;
 import com.bilwesh.devconnect.dto.UserRegistrationResponse;
 import com.bilwesh.devconnect.entity.UserEntity;
+import com.bilwesh.devconnect.exception.InvalidCredentialsException;
 import com.bilwesh.devconnect.exception.ResourceAlreadyExistsException;
+import com.bilwesh.devconnect.exception.UserNotFoundException;
 import com.bilwesh.devconnect.repository.UserRepository;
 import com.bilwesh.devconnect.service.impl.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserRegistrationResponse registerUser(UserRegistrationRequest request) {
@@ -31,7 +40,7 @@ public class UserServiceImpl implements UserService {
         userEntity.setUsername(request.getUsername());
         userEntity.setEmail(request.getEmail());
 
-        userEntity.setPassword(request.getPassword());
+        userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
         userEntity.setFullName(request.getFullName());
 
         UserEntity savedUser = userRepository.save(userEntity);
@@ -42,6 +51,24 @@ public class UserServiceImpl implements UserService {
         response.setEmail(savedUser.getEmail());
         response.setFullName(savedUser.getFullName());
         response.setCreatedAt(savedUser.getCreatedAt());
+
+        return response;
+    }
+
+    @Override
+    public UserLoginResponse loginUser(UserLoginRequest request) {
+        UserEntity user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
+
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid Credentials");
+        }
+
+        UserLoginResponse response = new UserLoginResponse();
+        response.setId(user.getUserid());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+        response.setFullName(user.getFullName());
 
         return response;
     }

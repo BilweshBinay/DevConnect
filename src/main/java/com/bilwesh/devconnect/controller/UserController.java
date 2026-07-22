@@ -1,5 +1,7 @@
 package com.bilwesh.devconnect.controller;
 
+import com.bilwesh.devconnect.dto.UserLoginRequest;
+import com.bilwesh.devconnect.dto.UserLoginResponse;
 import com.bilwesh.devconnect.dto.UserRegistrationRequest;
 import com.bilwesh.devconnect.dto.UserRegistrationResponse;
 import com.bilwesh.devconnect.service.impl.UserService;
@@ -25,5 +27,11 @@ public class UserController {
     public ResponseEntity<UserRegistrationResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
         UserRegistrationResponse response = userService.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserLoginResponse> login(@Valid @RequestBody UserLoginRequest request) {
+        UserLoginResponse response = userService.loginUser(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
