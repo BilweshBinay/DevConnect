@@ -9,9 +9,8 @@ import com.bilwesh.devconnect.exception.InvalidCredentialsException;
 import com.bilwesh.devconnect.exception.ResourceAlreadyExistsException;
 import com.bilwesh.devconnect.exception.UserNotFoundException;
 import com.bilwesh.devconnect.repository.UserRepository;
+import com.bilwesh.devconnect.security.JwtUtils;
 import com.bilwesh.devconnect.service.impl.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +19,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtils jwtUtils) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtils = jwtUtils;
     }
 
     public UserRegistrationResponse registerUser(UserRegistrationRequest request) {
@@ -57,6 +58,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserLoginResponse loginUser(UserLoginRequest request) {
+
         UserEntity user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
@@ -64,11 +66,14 @@ public class UserServiceImpl implements UserService {
             throw new InvalidCredentialsException("Invalid Credentials");
         }
 
+        String token = jwtUtils.generateToken(user.getEmail());
+
         UserLoginResponse response = new UserLoginResponse();
         response.setId(user.getUserid());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setFullName(user.getFullName());
+        response.setToken(token);
 
         return response;
     }
